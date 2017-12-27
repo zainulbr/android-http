@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "595772621485",
+    "firebase_url": "https://risyat-a8e67.firebaseio.com",
+    "project_id": "risyat-a8e67",
+    "storage_bucket": "risyat-a8e67.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:595772621485:android:712b2d2fb97a7b27",
+        "android_client_info": {
+          "package_name": "com.example.risyat.skrpsi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "595772621485-ok0jvmeral1qqo9f09l40dj3ljjqsgao.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD28Ka5S8f05d4WUmstakgyTmDcP7N1jLI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

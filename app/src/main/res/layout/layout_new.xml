@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/login_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true">
+
+
+        <Switch
+            android:id="@+id/notif_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:src="@drawable/secure"
+            android:backgroundTint="@android:color/white" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:layout_gravity="center"/>
+
+
+        <EditText
+            android:id="@+id/edt_text_sensor1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:background="#1565C0"
+            android:drawableLeft="@drawable/ic_gps_24dp"
+            android:drawablePadding="16dp"
+            android:drawableTint="@android:color/white"
+            android:hint="Sensor 1"
+            android:padding="10dp"
+            android:inputType="none"
+            android:textColor="@android:color/white"
+            android:textColorHint="@android:color/white" />
+
+        <EditText
+            android:id="@+id/edt_text_sensor2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="#1565C0"
+            android:drawableLeft="@drawable/ic_gps_24dp"
+            android:drawablePadding="16dp"
+            android:drawableTint="@android:color/white"
+            android:hint="Sensor 2"
+            android:padding="10dp"
+            android:inputType="none"
+            android:textColor="@android:color/white"
+            android:textColorHint="@android:color/white" />
+        <EditText
+            android:id="@+id/edt_text_sensor3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="#1565C0"
+            android:drawableLeft="@drawable/ic_gps_24dp"
+            android:drawablePadding="16dp"
+            android:drawableTint="@android:color/white"
+            android:hint="Sensor 3"
+            android:padding="10dp"
+            android:inputType="none"
+            android:textColor="@android:color/white"
+            android:textColorHint="@android:color/white" />
+        <EditText
+            android:id="@+id/edt_text_sensor4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="#1565C0"
+            android:drawableLeft="@drawable/ic_gps_24dp"
+            android:drawablePadding="16dp"
+            android:drawableTint="@android:color/white"
+            android:hint="Sensor 4"
+            android:padding="10dp"
+            android:textColor="@android:color/white"
+            android:textColorHint="@android:color/white" />
+
+        <Button
+            android:id="@+id/btnReload"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:background="#42A5F5"
+            android:text="Reload"
+            android:drawableRight="@drawable/ic_loop_24dp"
+            android:drawableTint="@android:color/white"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:layout_marginBottom="30dp">
+
+
+    </LinearLayout>
+
+</RelativeLayout>

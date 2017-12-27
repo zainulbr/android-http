@@ -4,329 +4,202 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-//import android.media.Image;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.EditText;
-import android.widget.TabHost;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-//import org.apache.http.*;
-import org.json.*;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+import com.example.risyat.skrpsi.model.App;
+import com.example.risyat.skrpsi.model.Data;
+import com.example.risyat.skrpsi.model.Sensor;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 
-import java.io.BufferedReader;
+import dmax.dialog.SpotsDialog;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonStreamParser;
+import com.google.gson.TypeAdapter;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.Time;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static android.content.ContentValues.TAG;
-import static android.view.View.GONE;
-import static android.view.View.INVISIBLE;
-import static android.view.View.VISIBLE;
 
-public class MainActivity extends Activity implements View.OnClickListener {
 
-    public final static String PREF_IP = "PREF_IP_ADDRESS";
-    public final static String PREF_PORT = "PREF_PORT_NUMBER";
-    // declare buttons and text inputs
-    private ImageView Off,On;
-    private EditText editTextIPAddress, editTextPortNumber;
-    private TextView[] Sensors;
-    private Handler handler = new Handler();
-    private Runnable r;
-    private  Thread thread;
-    // shared preferences objects used to save the IP address and port so that the user doesn't have to
-    // type them next time he/she opens the app.
-    SharedPreferences.Editor editor;
-    SharedPreferences sharedPreferences;
+public class MainActivity extends Activity {
+
+    private SpotsDialog ProgressDlg;
+
+    public TextView[] Sensors;
+
+    private String[] SensorsName;
+
+    SharedPreferences.Editor spe;
+    SharedPreferences sp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-
-        sharedPreferences = getSharedPreferences("HTTP_HELPER_PREFS",Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
-
-        // assign buttons
-        Off = (ImageView)findViewById(R.id.imageView);
-        On = (ImageView)findViewById(R.id.imageView2);
-
-        // assign text inputs
-        editTextIPAddress = (EditText)findViewById(R.id.editTextIPAddress);
-        editTextPortNumber = (EditText)findViewById(R.id.editTextPortNumber);
+        setContentView(R.layout.layout_new);
+        ProgressDlg = new SpotsDialog(this);
+        sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        spe = sp.edit();
         Sensors = new TextView[4];
-        Sensors[0] = (TextView)findViewById(R.id.textView);
-        Sensors[1] = (TextView)findViewById(R.id.textView3);
-        Sensors[2] = (TextView)findViewById(R.id.textView4);
-        Sensors[3] = (TextView)findViewById(R.id.textView9);
+        Sensors[0] = (TextView) findViewById(R.id.edt_text_sensor1);
+        Sensors[1] = (TextView) findViewById(R.id.edt_text_sensor2);
+        Sensors[2] = (TextView) findViewById(R.id.edt_text_sensor3);
+        Sensors[3] = (TextView) findViewById(R.id.edt_text_sensor4);
+        SensorsName = Data.SensorsText;
 
-        // set button listener (this class)
-        On.setOnClickListener(this);
-        Off.setOnClickListener(this);
-
-        // get the IP address and port number from the last time the user used the app,
-        // put an empty string "" is this is the first time.
-        editTextIPAddress.setText(sharedPreferences.getString(PREF_IP,""));
-        editTextPortNumber.setText(sharedPreferences.getString(PREF_PORT,""));
-    }
-
-
-    @Override
-    public void onClick(final View view) {
-
-        // get the pin number
-        String parameterValue = "";
-        // get the ip address
-        final String ipAddress = editTextIPAddress.getText().toString().trim();
-        // get the port number
-        final String portNumber = editTextPortNumber.getText().toString().trim();
-
-
-        // save the IP address and port for the next time the app is used
-        editor.putString(PREF_IP,ipAddress); // set the ip address value to save
-        editor.putString(PREF_PORT,portNumber); // set the port number to save
-        editor.commit(); // save the IP and PORT
-
-        // get the pin number from the button that was clicked
-        if(view.getId()==On.getId())
-        {
-            parameterValue = "11";
-
-            if (thread != null && thread.isAlive()){
-                System.out.println("threed alive");
-                Toast.makeText(getBaseContext(),"Application is running",Toast.LENGTH_LONG).show();
-                return;
-            }
-//            On.setVisibility(GONE);
-//            Off.setVisibility(VISIBLE);
-        }
-        else if(view.getId()==Off.getId())
-        {
-            parameterValue = "12";
-            if (thread != null  && !thread.isAlive()){
-                Toast.makeText(getBaseContext(),"application off", Toast.LENGTH_LONG).show();
-            }
-//            On.setVisibility(VISIBLE);
-//            Off.setVisibility(GONE);
-        }
-
-        // execute HTTP request''
-        if(ipAddress.length()>0 && portNumber.length()>0 && (parameterValue == "11" || parameterValue.equals("11")) ) {
-            final String finalParameterValue = parameterValue;
-//            r = new Runnable() {
-//                public void run() {
-//                    Log.e(TAG, "run: ");
-//                    new HttpRequestAsyncTask(
-//                            view.getContext(), finalParameterValue, ipAddress, portNumber, "pin"
-//                    ).execute();
-//                    Log.e(TAG, "run: outpost");
-//                    handler.postDelayed(this, 1000);
-//                }
-//            };
-//            handler.postDelayed(r, 2000);
-
-            thread = new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        while(true) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    new HttpRequestAsyncTask(
-                                            view.getContext(), finalParameterValue, ipAddress, portNumber, "pin"
-                                    ).execute();
-                                    try {
-                                        sleep(5000);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                        Log.e(TAG, "run: ",e );
-                                    }
-                                    handler.post(this);
-
-                                }
-                            });
-                            System.out.println("start");
-                            sleep(5000);
-                            System.out.println("finish");
-                            Log.e(TAG, "run: oke" );
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "run: ",e );
-                    }
-                }
-            };
-            thread.start();
-        }
-        if (parameterValue == "12" || parameterValue.equals("12")){
-            System.out.println("test");
-            if (thread.isAlive()){
-                thread.stop();
-                thread.destroy();
-                Log.e(TAG, "onClick: stop");
-            }
-            handler.removeCallbacks(r);
-            Log.e(TAG, "onClick: ");
-        }
-    }
-
-    /**
-     * Description: Send an HTTP Get request to a specified ip address and port.
-     * Also send a parameter "parameterName" with the value of "parameterValue".
-     * @param parameterValue the pin number to toggle
-     * @param ipAddress the ip address to send the request to
-     * @param portNumber the port number of the ip address
-     * @param parameterName
-     * @return The ip address' reply text, or an ERROR message is it fails to receive one
-     */
-    public String sendRequest(String parameterValue, String ipAddress, String portNumber, String parameterName) {
-        String serverResponse = "ERROR";
+        Button btnReload = (Button) findViewById(R.id.btnReload);
+        final Switch onoffNotif = (Switch) findViewById(R.id.notif_switch);
 
         try {
-
-            HttpClient httpclient = new DefaultHttpClient(); // create an HTTP client
-            // define the URL e.g. http://myIpaddress:myport/?pin=13 (to toggle pin 13 for example)
-            String url = "http://risyatskripsi1.000webhostapp.com/index.php/welcome/latest";
-            URI website = new URI(url);
-            HttpGet getRequest = new HttpGet(); // create an HTTP GET object
-            getRequest.setURI(website); // set the URL of the GET request
-            HttpResponse response = httpclient.execute(getRequest); // execute the request
-            // get the ip address server's reply
-            InputStream content = null;
-            content = response.getEntity().getContent();
-            BufferedReader in = new BufferedReader(new InputStreamReader(
-                    content
-            ));
-            serverResponse = in.readLine();
-            // Close the connection
-            content.close();
-        } catch (ClientProtocolException e) {
-            // HTTP error
-            serverResponse = e.getMessage();
-            e.printStackTrace();
-        } catch (IOException e) {
-            // IO error
-            serverResponse = e.getMessage();
-            e.printStackTrace();
-        } catch (URISyntaxException e) {
-            // URL syntax error
-            serverResponse = e.getMessage();
-            e.printStackTrace();
+            onoffNotif.setChecked(sp.getBoolean(Data.notif,false));
+        }catch (NullPointerException e){
+            Log.e(TAG, "onCreate: ", e);
         }
-        // return the server's reply/response text
-        return serverResponse;
+
+        for (TextView sensor : Sensors) {
+            sensor.setEnabled(false);
+            sensor.setFocusable(false);
+        }
+
+        btnReload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getLatest();
+            }
+        });
+
+
+        onoffNotif.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onoffNotif.isChecked()) {
+                    spe.putBoolean(Data.notif,true);
+                    setToast("Notification Actived");
+                }else{
+                    spe.putBoolean(Data.notif,false);
+                    setToast("Notification Disabled");
+                }
+                spe.commit();
+            }
+        });
+
+        App.setContext(this);
+
     }
 
+    private void getLatest() {
+        OkHttpClient okHttpClient = new OkHttpClient();
+        ProgressDlg.show();
 
-    /**
-     * An AsyncTask is needed to execute HTTP requests in the background so that they do not
-     * block the user interface.
-     */
-    private class HttpRequestAsyncTask extends AsyncTask<Void, Void, Void> {
+        Request request = new Request.Builder().url("https://risyatskripsi1.000webhostapp.com/index.php/sensors/latest").get().build();
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "onFailure: ",e );
+                setToast("Internet connection unstable");
+                ProgressDlg.dismiss();
+            }
 
-        // declare variables needed
-        private String requestReply,ipAddress, portNumber;
-        private Context context;
-        private AlertDialog alertDialog;
-        private String parameter;
-        private String parameterValue;
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                Log.d(TAG, "onResponse: " + response);
+                if (response.isSuccessful()) {
+                    parse(response.body().string());
+                }else{
+                    setToast("Internal Sever Error");
+                }
+                ProgressDlg.dismiss();
 
-        /**
-         * Description: The asyncTask class constructor. Assigns the values used in its other methods.
-         * @param context the application context, needed to create the dialog
-         * @param parameterValue the pin number to toggle
-         * @param ipAddress the ip address to send the request to
-         * @param portNumber the port number of the ip address
-         */
-        public HttpRequestAsyncTask(Context context, String parameterValue, String ipAddress, String portNumber, String parameter)
-        {
-            this.context = context;
-            alertDialog = new AlertDialog.Builder(this.context)
-                    .setTitle("HTTP Response From IP Address:")
-                    .setCancelable(true)
-                    .create();
+            }
+        });
 
-            this.ipAddress = ipAddress;
-            this.parameterValue = parameterValue;
-            this.portNumber = portNumber;
-            this.parameter = parameter;
-        }
+    }
 
-        /**
-         * Name: doInBackground
-         * Description: Sends the request to the ip address
-         * @param voids
-         * @return
-         */
-        @Override
-        protected Void doInBackground(Void... voids) {
-//            alertDialog.setMessage("Data sent, waiting for reply from server...");
-//            if(!alertDialog.isShowing())
-//            {
-//                alertDialog.show();
-//            }
-            requestReply = sendRequest(parameterValue,ipAddress,portNumber, parameter);
-            System.out.println(requestReply);
-            return null;
-        }
+    private void parse(String response) {
+        final JsonElement root = new JsonParser().parse(response);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < Sensors.length; i++) {
+                    int id = root.getAsJsonArray().get(i).getAsJsonObject().get("id").getAsInt();
+                    String value = root.getAsJsonArray().get(i).getAsJsonObject().get("status").getAsString();
+                    String time = root.getAsJsonArray().get(i).getAsJsonObject().get("time").getAsString();
+                    String def = value.equals("1") ? "Sensor " + (id + 1)+ " Detected" : "Sensor " + (id + 1)+ " Undetected";
+                    spe.putString(Data.SensorsText[id], def);
+                    spe.commit();
+                    Sensors[id].setText(def + " " + time);
+                    if (value.equals("1")){
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            Sensors[id].setCompoundDrawableTintList(ColorStateList.valueOf(Color.RED));
 
-        /**
-         * Name: onPostExecute
-         * Description: This function is executed after the HTTP request returns from the ip address.
-         * The function sets the dialog's message with the reply text from the server and display the dialog
-         * if it's not displayed already (in case it was closed by accident);
-         * @param aVoid void parameter
-         */
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            try {
-                JSONArray arr = new JSONArray(requestReply);
-                for (int i = 0; i < arr.length(); i++) {
-                    int id = arr.getJSONObject(i).getInt("id");
-                    int status = arr.getJSONObject(i).getInt("status");
-                    String sStatus = status == 1 ? "Detected" : "Not Detected";
-                    Sensors[id].setText(sStatus);
+                        }
+                        Sensors[id].setTextColor(Color.RED);
+                    }else{
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            Sensors[id].setCompoundDrawableTintList(ColorStateList.valueOf(Color.WHITE));
+                        }
+                        Sensors[id].setTextColor(Color.WHITE);
+                    }
                 }
             }
-            catch(JSONException e){
-
-            }
-
-//            alertDialog.setMessage(requestReply);
-//            if(!alertDialog.isShowing())
-//            {
-//                alertDialog.show(); // show dialog
-//            }
-        }
-
-        /**
-         * Name: onPreExecute
-         * Description: This function is executed before the HTTP request is sent to ip address.
-         * The function will set the dialog's message and display the dialog.
-         */
-        @Override
-        protected void onPreExecute() {
-//            alertDialog.setMessage("Sending data to server, please wait...");
-//            if(!alertDialog.isShowing())
-//            {
-//                alertDialog.show();
-//            }
-        }
-
+        });
     }
+
+    private void setToast(String message){
+        Toast.makeText(getApplicationContext(),message,Toast.LENGTH_LONG).show();
+    }
+
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        for (int i = 0; i < Sensors.length; i++) {
+//            Sensors[i].setText(Data.SensorStatus[i]);
+//        }
+//    }
+
+        @Override
+    protected void onResume() {
+        super.onResume();
+        for (int i = 0; i < Sensors.length; i++) {
+            Sensors[i].setText(sp.getString(Data.SensorsText[i],Data.SensorStatusDefault[i]));
+            System.out.println(sp.getString(Data.SensorsText[i],Data.SensorStatusDefault[i]));
+        }
+    }
+
 }
